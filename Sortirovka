@@ -1,0 +1,243 @@
+//defines pins
+#include <AFMotor.h>      // Подключаем библиотеку AFMotor
+#define X_MAX 36
+#define Y_MAX 7
+AF_DCMotor motor1(3);      // Указываем какому порту подключен двигатель (1 - 4)
+AF_DCMotor motor2(4);      // Указываем какому порту подключен двигатель (1 - 4)
+
+const int stepPinY = 23;  //PUL -Pulse
+const int dirPinY = 25; //DIR -Direction
+const int enPinY = 27;  //ENA -Enable
+const int stepPinX = 29;  //PUL -Pulse
+const int dirPinX = 31; //DIR -Direction
+const int enPinX = 33;  //ENA -Enable
+
+int x,y,xx,yy,s;
+
+void stepY_back() {
+    //Enables the motor direction to move      Назад
+  digitalWrite(dirPinY,HIGH);
+  //Makes 200 Pulses for making one full cycle rotation
+  for(int x = 0; x < 1000; x++){
+    digitalWrite(stepPinY,HIGH); 
+    delayMicroseconds(500); 
+    digitalWrite(stepPinY,LOW); 
+    delayMicroseconds(500); 
+  }
+ 
+  //One second delay
+  y--;
+  delay(1000);
+
+}   // stepY_back
+
+void stepX_back() {
+    //Enables the motor direction to move      Назад
+  digitalWrite(dirPinX,HIGH);
+  //Makes 200 Pulses for making one full cycle rotation
+  for(int x = 0; x < 200; x++){
+    digitalWrite(stepPinX,HIGH); 
+    delayMicroseconds(500); 
+    digitalWrite(stepPinX,LOW); 
+    delayMicroseconds(500); 
+  }
+ 
+  //One second delay
+  delay(1000);
+  x--;
+
+}   // stepX_back
+
+void stepX_forward() {
+    //Changes the rotations direction     Едем вперед
+  digitalWrite(dirPinX,LOW);
+  // Makes 200 pulses for making one full cycle rotation
+  if (x<X_MAX) {
+    for(int x = 0; x < 200; x++) {
+      digitalWrite(stepPinX,HIGH);
+      delayMicroseconds(500);
+      digitalWrite(stepPinX,LOW);
+      delayMicroseconds(500);
+    }
+  x++;
+  } //if (x<X_mAX)  
+  
+  //One second delay
+  delay(1000); 
+}  // stepX_forward
+
+void stepY_forward() {
+    //Changes the rotations direction     Едем вперед
+  digitalWrite(dirPinY,LOW);
+  // Makes 200 pulses for making one full cycle rotation
+  if (y<Y_MAX) {
+    for(int x = 0; x < 1000; x++) {
+      digitalWrite(stepPinY,HIGH);
+      delayMicroseconds(500);
+      digitalWrite(stepPinY,LOW);
+      delayMicroseconds(500);
+    }
+  y++;
+  } //if (y<=Y_MAX)
+  //One second delay
+  delay(1000); 
+}  // stepY_forward
+
+void Run_Man() {
+  motor1.run(FORWARD);     // Вращение двигателя вперед
+  motor2.run(FORWARD);     // Вращение двигателя вперед
+ 
+    motor1.setSpeed(255);    // Отправка скорости
+    motor2.setSpeed(150);    // Отправка скорости
+    delay(3000);            // Пауза
+
+  motor1.run(BACKWARD);    // Вращение двигателя назад
+  delay(2000);
+  motor2.run(BACKWARD);    // Вращение двигателя назад
+
+  motor1.setSpeed(255);    // Отправка скорости
+  motor2.setSpeed(255);    // Отправка скорости
+//    delay(1000);            // Пауза
+//  motor1.run(RELEASE);     // Останавливаем двигатель
+//  motor2.run(RELEASE);     // Останавливаем двигатель
+//  delay(1000);            // Пауза
+  
+}
+void setup(){
+  Serial.begin(9600);
+// Поднимаем руку и передаем управление шаговым двигателям  
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor2.setSpeed(255);    // Начальная скорость вращения
+  motor2.run(RELEASE);     // Останавливаем двигатель
+  motor1.run(BACKWARD);    // Вращение двигателя назад
+  motor2.run(BACKWARD);    // Вращение двигателя назад
+    delay(2000);
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor2.run(RELEASE);     // Останавливаем двигатель
+
+//Sets the pins as Outputs    Пины шаговых двигателей на выход
+  pinMode(stepPinY,OUTPUT); 
+  pinMode(dirPinY,OUTPUT);
+  pinMode(enPinY,OUTPUT);
+  digitalWrite(enPinY,LOW);
+  pinMode(stepPinX,OUTPUT); 
+  pinMode(dirPinX,OUTPUT);
+  pinMode(enPinX,OUTPUT);
+  digitalWrite(enPinX,LOW);
+  x=0;
+  y=0;
+}
+
+
+
+void loop(){
+  
+/*if (Serial.available() >0) {
+  s=Serial.read();
+  Serial.println(s);
+}  //Serial.available
+
+if (Serial.available() >0) {
+  s=Serial.read();
+  if (s=='1') {
+    Serial.println(s);
+    stepX_forward();
+  }  // if x==1
+  if (s=='2') {
+    Serial.println(s);
+    stepX_back();
+  }  // if x==2
+  if (s=='3') {
+    Serial.println(s);
+    stepY_forward();
+  }  // if x==4
+  if (s=='4') {
+    Serial.println(s);
+    stepY_back();
+  }  // if s==4
+} //Serial_available  
+*/
+Serial.println("Hello from Arduino!");
+while (y<Y_MAX) {
+  while (x<X_MAX) {
+  if (Serial.available() >0) {
+    s=Serial.read();
+    if (s=='7') {
+      Serial.println("Обнаружен обьект, сохраняем координаты");
+      Serial.print("X=  ");
+      Serial.print(x);
+      Serial.print("  Y=  ");
+      Serial.println(y);
+      yy=y;
+      Run_Man();
+      while (y<Y_MAX) 
+        stepY_forward();
+      delay(4000); 
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor2.setSpeed(255);    // Начальная скорость вращения
+  motor2.run(RELEASE);     // Останавливаем двигатель
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(FORWARD);    // Вращение двигателя назад
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor2.run(BACKWARD);    // Вращение двигателя назад
+    delay(3000);
+  motor2.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor1.run(FORWARD);    // Вращение двигателя назад
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor2.run(RELEASE);     // Останавливаем двигатель 
+       
+      while (y>yy)
+        stepY_back();
+    }
+  }
+    stepX_forward();
+  } //while (x<X_MAX)
+  if (x==X_MAX) 
+    stepY_forward();
+  while (x>0) {
+    stepX_back();
+  if (Serial.available() >0) {
+    s=Serial.read();
+    if (s=='7') {
+      Serial.println("Обнаружен обьект, сохраняем координаты");
+      Serial.print("X=  ");
+      Serial.print(x);
+      Serial.print("  Y=  ");
+      Serial.println(y);
+      yy=y;
+      Run_Man();
+      while (y<Y_MAX) 
+        stepY_forward();
+      delay(4000); 
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor2.setSpeed(255);    // Начальная скорость вращения
+  motor2.run(RELEASE);     // Останавливаем двигатель
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(FORWARD);    // Вращение двигателя назад
+  motor1.setSpeed(255);    // Начальная скорость вращения
+  motor2.run(BACKWARD);    // Вращение двигателя назад
+    delay(3000);
+  motor2.setSpeed(255);    // Начальная скорость вращения
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor1.run(FORWARD);    // Вращение двигателя назад
+  motor1.run(RELEASE);     // Останавливаем двигатель
+  motor2.run(RELEASE);     // Останавливаем двигатель
+    }
+     while (y>yy)
+        stepY_back();
+  }    
+    
+//Serial.print("X=  ");
+//Serial.print(x);
+//Serial.print("  Y=  ");
+//Serial.println(y);
+ }//while (x>0)
+  if (x==0) 
+    stepY_forward();
+  
+}   
+}
